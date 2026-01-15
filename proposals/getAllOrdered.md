@@ -23,15 +23,13 @@ allow to retrieve a list of bound declaration in the exact same order they were 
 
 ### Why is this change important for Koin?
 
-important for Koin, no idea, but for me, yes xD.
-
 In my library project [link](https://github.com/by-tezov/tuucho), I allow the user library to create middlewares which is injected in the Isolated Koin context to have control on the library behavior (Network, navigation, other stuff)
 
 Example:
 
-My library have navigation stack, the user can wrap the core navigation inside their own middleware to guard auth section and/or redirect on the fly, load configuration, catch errors etc.
+My library have navigation stack, the user can wrap the core navigation inside their own middlewares to guard auth section and/or redirect on the fly, load configuration, catch errors etc.
 
-To keep the code clean, we declare different middleware
+To keep the code clean, we declare different middlewares
 
 ```
 CatchErrorMiddleware [
@@ -46,7 +44,7 @@ CatchErrorMiddleware [
 ]
 ```
 
-this can work has expected only if the order of middleware is preserved (same concept as nestJS, or retrofit interceptor).
+this can work as expected only if the order of middlewares is preserved (same concept as nestJS, or retrofit interceptor).
 
 ---
 
@@ -66,9 +64,9 @@ module {
     
     factoryOf(::LoggerBeforeNavigateToUrlMiddleware) bindOrdered NavigationMiddleware.ToUrl::class
 }
--> module is fed to koin isolated context (or koin)
+-> module is fed to koin
 
-and somewhere in the Library
+and somewhere else in the Library
 
 factory {
     NavigateToUrlUseCase(
@@ -76,7 +74,7 @@ factory {
         useCaseExecutor = get(),
         ...
         middlewareExecutor = get(),
-        navigationMiddlewares = getAllOrdered()
+        navigationMiddlewares = getAllOrdered() <- here the retrieval happens
     )
 }
 ```
@@ -141,11 +139,10 @@ fun <T : Any> Scope.getAllOrdered(
 }
 ```
 
-it works for me, but the getAllOrdered is ugly and use too much KoinInternalApi
+it works for me, but the getAllOrdered is ugly and use too much KoinInternalApi.
 
-code here [link](https://github.com/by-tezov/tuucho/blob/master/tuucho/core-modules/domain/business/src/commonMain/kotlin/com/tezov/tuucho/core/domain/business/_system/koin/BindOrdered.kt)
-
-unit test here [link](https://github.com/by-tezov/tuucho/blob/master/tuucho/core-modules/domain/business/src/commonTest/kotlin/com/tezov/tuucho/core/domain/business/_system/koin/BindOrderedTest.kt)
+- code here [link](https://github.com/by-tezov/tuucho/blob/master/tuucho/core-modules/domain/business/src/commonMain/kotlin/com/tezov/tuucho/core/domain/business/_system/koin/BindOrdered.kt)
+- unit test here [link](https://github.com/by-tezov/tuucho/blob/master/tuucho/core-modules/domain/business/src/commonTest/kotlin/com/tezov/tuucho/core/domain/business/_system/koin/BindOrderedTest.kt)
 
 ---
 
