@@ -1,13 +1,13 @@
-|             |                                    |
-|-------------|------------------------------------|
-| Feature     | GetAllAssociated		                 |
-| Submitted   | 2026-01                            |
-| Status        | Draft                              |
-| Issue       |                                    |
+|             |                                   |
+|-------------|-----------------------------------|
+| Feature     | GetAllAssociated		                |
+| Submitted   | 2026-01                           |
+| Status        | Draft                             |
+| Issue       |                                   |
 | Project Card  | https://github.com/by-tezov/tuucho |
-| Project	  | [Koin]			                          |
-| Component     | core                               |
-| Version	  | 4.2.0+			                          |
+| Project	  | [Koin]			                         |
+| Component     | core                              |
+| Version	  | 4.2.0+			                         |
 
 ---
 
@@ -15,7 +15,49 @@
 
 ### What is this proposal about? What problem does it solve?
 
-allow to retrieve a list a specific list of bound declaration.
+allow to retrieve a list of specific items of bound declaration. It allows to retrieve different list when the interface of class is the same.
+
+example:
+
+```
+
+interface Marker
+class A: Marker
+class B: Marker
+class C: Marker
+
+if I want a list with
+[A, B, C] -> getAll<Marker>() is enough
+
+But if I want different list
+[A,C]
+[B,C] -> it is not possible. I would need to add as many interfaces on each class and it become exponential
+
+So what I did it to allow to bound (associate) to anything and the class don't need to implement it.
+
+So it becomes :
+
+interface Marker1
+interface Marker2
+
+interface RealInterface
+class A : RealInterface
+class B : RealInterface
+class C : RealInterface
+
+single / factory A associate to Marker1
+single / factory A associate to Marker2
+
+single / factory B associate to Marker1
+
+single / factory C associate to Marker2
+
+getAllAssociated<Marker1> return a list of RealInterface with A and B
+getAllAssociated<Marker2> return a list of RealInterface with A and C
+
+```
+
+And it allow to add any class to any list associated anywhere cross koin modules, cross project module
 
 ---
 
@@ -23,11 +65,9 @@ allow to retrieve a list a specific list of bound declaration.
 
 ### Why is this change important for Koin?
 
-important for Koin, no idea, but for me, yes xD.
+In my library project [link](https://github.com/by-tezov/tuucho), I allow the user library to add processors in many places / project modules all fed to Koin registry. Some declarations are used in different lists.
 
-In my library project [link](https://github.com/by-tezov/tuucho), I allow the user library to add processors in many places / project modules all fed to KoinContext. Some declaration are used in different lists.
-
-Right now, there are only getAll(), we can't use qualifier. 
+Right now, there are only getAll(), we can't use qualifier.
 
 ---
 
@@ -173,7 +213,9 @@ inline fun <reified T : Any> ScopeDSL.associate(
 }
 ```
 
-it works for me, but the issues is i can't resolved the linked scope because they are internal or private.
+it works for me, but the issues is:
+- I can't resolved the linked scope because they are internal or private.
+- I need to duplicate Koin core code since direct function are internal
 
 code here [link](https://github.com/by-tezov/tuucho/blob/master/tuucho/core-modules/domain/business/src/commonMain/kotlin/com/tezov/tuucho/core/domain/business/_system/koin/AssociateDSL.kt)
 
@@ -193,7 +235,7 @@ factory(named("mylist1")) { A() }
 factory(named("mylist2")) { A() }
 ```
 
-the second one erase or hide the first one and also it instanciate two InstanceFactory when one is only needed.
+the second one erase (or hide the first one) and also it instantiate two InstanceFactory when one is only needed.
 
 
 ---
@@ -202,7 +244,7 @@ the second one erase or hide the first one and also it instanciate two InstanceF
 
 ### Anything relevant for contributors or maintainers to know?
 
-I mainly talk about Library project in my request, but I think in simple application, it could also be useful
+I mainly talk about Library project in my request, but I think in simple application, it could also be useful.
 
 ---
 
@@ -210,7 +252,7 @@ I mainly talk about Library project in my request, but I think in simple applica
 
 ### How might this evolve or inspire related features?
 
-I think it can be useful in many usecase, not sure I gave enough detail to picture the full behavior. But if it doesn't interrest Koin, would it be possible to remove the internal of some part in Koin core to allow us to add our own behavior ?
+I think it can be useful in many use cases, not sure if I gave enough detail to picture the full behavior. If it doesn't interrest Koin core, would it be possible to remove the internal of some part in Koin core to allow us to add our own behavior ? Maybe by marking them DelicateApi ?
 
 like the getAll generic, linkedScope, the rootScopeQualifier, ...
 
